@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "agl_monitor_flake"
+name = "agl-monitor-flake"
 
 packages = [
     { include = "agl_monitor_flake" }
