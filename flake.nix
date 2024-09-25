@@ -23,8 +23,6 @@
     raw-pkgs = import nixpkgs {
       inherit system;
       config.allowUnfree = true;
-
-    
     };
     # note that we use "inputs.nixpkgs-unstable" to refer to the flake input
     # We need to do that because in "outputs = { nixpkgs, ... } @ inputs:",
@@ -38,6 +36,8 @@
       projectDir = ./.;
       src = lib.cleanSource ./.;
       python = pkgs."python${python_version}Full";
+
+      
     };       
     
   in
