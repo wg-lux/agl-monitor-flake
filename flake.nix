@@ -209,7 +209,7 @@
                 "default" = {
                   BACKEND = "django_redis.cache.RedisCache";
                   LOCATION = "redis://localhost:6382/0";
-                  TIMEOUT = 300;
+                  TIMEOUT = "300";
                   OPTIONS = {
                     "CLIENT_CLASS" = "django_redis.client.DefaultClient";
                   };
@@ -237,7 +237,7 @@
           services.redis.servers."agl-monitor" = {
             enable = true;
             bind = config.services.agl-monitor.redis-bind;
-            port = config.services.agl-monitor.redis-port;
+            port = "${toString config.services.agl-monitor.redis-port}";
             settings = {};
           };
 
@@ -307,10 +307,6 @@
                 "CELERY_SIGNAL_LOGFILE=${config.services.agl-monitor.conf.CELERY_SIGNAL_LOGFILE}"
               ];
             };
-            # script = ''
-            #     nix develop
-            #     exec gunicorn agl_monitor.wsgi:application --bind ${config.services.agl-monitor.bind}:${toString config.services.agl-monitor.django-port}
-            #   '';
           };
         };
 
