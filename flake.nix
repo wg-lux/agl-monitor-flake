@@ -233,80 +233,90 @@
 
         # Service Implementation
         config = lib.mkIf config.services.agl-monitor.enable {
+
+
+
           # Create Redis Server
-          services.redis.servers."agl-monitor" = {
-            enable = true;
-            bind = config.services.agl-monitor.redis-bind;
-            port = "${toString config.services.agl-monitor.redis-port}";
-            settings = {};
-          };
+          
+          # services.redis.servers."agl-monitor" = {
+          #   enable = true;
+          #   bind = config.services.agl-monitor.redis-bind;
+          #   port = "${toString config.services.agl-monitor.redis-port}";
+          #   settings = {};
+          # };
+
+
+
 
           # Create Celery Service
-          systemd.services.agl-monitor-celery = {
-            description = "AGL Monitor Celery Service";
-            after = [ "network.target" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor worker -l info";
-              Restart = "always";
-              RestartSec = "5";
-              # WorkingDirectory = ./.; REQUIRED?!
-              User = config.services.agl-monitor.user;
-              Group = config.services.agl-monitor.group;
-              Environment = [];
-            };
-            # script = ''
-            #     nix develop
-            #     exec celery -A agl_monitor worker --loglevel=info
-            #   '';
-          };
+
+          # systemd.services.agl-monitor-celery = {
+          #   description = "AGL Monitor Celery Service";
+          #   after = [ "network.target" ];
+          #   wantedBy = [ "multi-user.target" ];
+          #   serviceConfig = {
+          #     ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor worker -l info";
+          #     Restart = "always";
+          #     RestartSec = "5";
+          #     # WorkingDirectory = ./.; REQUIRED?!
+          #     User = config.services.agl-monitor.user;
+          #     Group = config.services.agl-monitor.group;
+          #     Environment = [];
+          #   };
+          #   # script = ''
+          #   #     nix develop
+          #   #     exec celery -A agl_monitor worker --loglevel=info
+          #   #   '';
+          # };
 
           # Create Celery Beat Service
-          systemd.services.agl-monitor-celery-beat = {
-            description = "AGL Monitor Celery Beat Service";
-            after = [ "network.target" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor beat -l info";
-              Restart = "always";
-              RestartSec = "5";
-              # WorkingDirectory = ./.; REQUIRED?!
-              User = config.services.agl-monitor.user;
-              Group = config.services.agl-monitor.group;
-              Environment = [];
-            };
-            # script = ''
-            #   nix develop
-            #   exec celery -A agl_monitor beat --loglevel=INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
-            # '';
-          };
+
+          # systemd.services.agl-monitor-celery-beat = {
+          #   description = "AGL Monitor Celery Beat Service";
+          #   after = [ "network.target" ];
+          #   wantedBy = [ "multi-user.target" ];
+          #   serviceConfig = {
+          #     ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor beat -l info";
+          #     Restart = "always";
+          #     RestartSec = "5";
+          #     # WorkingDirectory = ./.; REQUIRED?!
+          #     User = config.services.agl-monitor.user;
+          #     Group = config.services.agl-monitor.group;
+          #     Environment = [];
+          #   };
+          #   # script = ''
+          #   #   nix develop
+          #   #   exec celery -A agl_monitor beat --loglevel=INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+          #   # '';
+          # };
 
           # Create the AGL Monitor Service
-          systemd.services.agl-monitor = {
-            description = "AGL Monitor Service";
-            after = [ "network.target" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/django-server";
-              Restart = "always";
-              RestartSec = "5";
-              # WorkingDirectory = ./.; REQUIRED?!
-              User = config.services.agl-monitor.user;
-              Group = config.services.agl-monitor.group;
-              Environment = [
-                "PATH=${poetryApp}/bin:/run/current-system/sw/bin"
-                "DJANGO_SETTINGS_MODULE=${config.services.agl-monitor.django-settings-module}"
-                "DJANGO_DEBUG=${toString config.services.agl-monitor.django-debug}"
-                "CELERY_BROKER_URL=${config.services.agl-monitor.conf.CELERY_BROKER_URL}"
-                "CELERY_RESULT_BACKEND=${config.services.agl-monitor.conf.CELERY_RESULT_BACKEND}"
-                "CELERY_ACCEPT_CONTENT=${config.services.agl-monitor.conf.CELERY_ACCEPT_CONTENT}"
-                "CELERY_TASK_SERIALIZER=${config.services.agl-monitor.conf.CELERY_TASK_SERIALIZER}"
-                "CELERY_RESULT_SERIALIZER=${config.services.agl-monitor.conf.CELERY_RESULT_SERIALIZER}"
-                "CELERY_TIMEZONE=${config.services.agl-monitor.conf.CELERY_TIMEZONE}"
-                "CELERY_BEAT_SCHEDULER=${config.services.agl-monitor.conf.CELERY_BEAT_SCHEDULER}"
-                "CELERY_SIGNAL_LOGFILE=${config.services.agl-monitor.conf.CELERY_SIGNAL_LOGFILE}"
-              ];
-            };
+
+          # systemd.services.agl-monitor = {
+          #   description = "AGL Monitor Service";
+          #   after = [ "network.target" ];
+          #   wantedBy = [ "multi-user.target" ];
+          #   serviceConfig = {
+          #     ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/django-server";
+          #     Restart = "always";
+          #     RestartSec = "5";
+          #     # WorkingDirectory = ./.; REQUIRED?!
+          #     User = config.services.agl-monitor.user;
+          #     Group = config.services.agl-monitor.group;
+          #     Environment = [
+          #       "PATH=${poetryApp}/bin:/run/current-system/sw/bin"
+          #       "DJANGO_SETTINGS_MODULE=${config.services.agl-monitor.django-settings-module}"
+          #       "DJANGO_DEBUG=${toString config.services.agl-monitor.django-debug}"
+          #       "CELERY_BROKER_URL=${config.services.agl-monitor.conf.CELERY_BROKER_URL}"
+          #       "CELERY_RESULT_BACKEND=${config.services.agl-monitor.conf.CELERY_RESULT_BACKEND}"
+          #       "CELERY_ACCEPT_CONTENT=${config.services.agl-monitor.conf.CELERY_ACCEPT_CONTENT}"
+          #       "CELERY_TASK_SERIALIZER=${config.services.agl-monitor.conf.CELERY_TASK_SERIALIZER}"
+          #       "CELERY_RESULT_SERIALIZER=${config.services.agl-monitor.conf.CELERY_RESULT_SERIALIZER}"
+          #       "CELERY_TIMEZONE=${config.services.agl-monitor.conf.CELERY_TIMEZONE}"
+          #       "CELERY_BEAT_SCHEDULER=${config.services.agl-monitor.conf.CELERY_BEAT_SCHEDULER}"
+          #       "CELERY_SIGNAL_LOGFILE=${config.services.agl-monitor.conf.CELERY_SIGNAL_LOGFILE}"
+          #     ];
+          #   };
           };
         };
 
