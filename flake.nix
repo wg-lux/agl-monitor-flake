@@ -127,82 +127,86 @@
 
     ## AGL Anonymizer Module
     nixosModules = {
-      agl-monitor = { config, pkgs, lib, ...}: {
+      agl-monitor = { config, pkgs, lib, ...}: 
+        let
+          mkOption = lib.mkOption;
+        in
+      {
         ## Options
         options.services.agl-monitor = {
-          enable = lib.mkoption {
+          enable = mkOption {
             default = false;
             description = "Enable the AGL Monitor service";
           };
 
-          config-json-file = lib.mkOption {
+          config-json-file = mkOption {
             type = lib.types.str;
             default = "/etc/agl-monitor.json";
             description = "The path to the configuration file for the AGL Monitor service";
           };
 
-          user = lib.mkOption {
+          user = mkOption {
             type = lib.types.str;
             default = "logging-user";
             description = "The user under which the AGL Monitor Server will run";
           };
 
-          group = lib.mkOption {
+          group = mkOption {
             type = lib.types.str;
             default = "service-user";
             description = "The group under which the AGL Monitor Server will run";
           };
 
-          custom-logs-dir = lib.mkOption {
+          custom-logs-dir = mkOption {
             type = lib.types.str;
             default = "/etc/custom-logs";
             description = "The directory where the AGL Monitor logs will be stored";
           };
 
-          django-debug = lib.mkOption {
+          django-debug = mkOption {
             type = lib.types.bool;
             default = true;
             description = "Enable Django debug mode";
           };
 
-          django-settings-module = lib.mkOption {
+          django-settings-module = mkOption {
               type = lib.types.str;
               default = "agl_monitor.settings_prod";
               description = "The settings module for the Django application";
             };
 
-          django-port = lib.mkOption {
+          django-port = mkOption {
             type = lib.types.int;
             default = 9243;
             description = "The port on which the Django server will listen";
           };
 
-          django-secret-key = lib.mkOption {
+          django-secret-key = mkOption {
             type = lib.types.str;
             default = "change-me";
             description = "The secret key for the Django application";
           };
 
           # Define the address on which the Django server will listen
-          bind = lib.mkOption {
+          bind = mkOption {
             type = lib.types.str;
             default = "localhost";
             description = "The address on which the Django server will listen";
           };
 
-          redis-port = lib.mkOption {
+          redis-port = mkOption {
             type = lib.types.int;
             default = 6382; #FIXME: currently isnt used, the port is currently defined via config file (agl-monitor.json)
             description = "The port on which the Redis server will listen"; 
           };
 
-          redis-bind = lib.mkOption {
+          redis-bind = mkOption {
             type = lib.types.str;
             default = "127.0.0.1";
             description = "The address on which the Redis server will listen";
           };
 
-          conf = lib.mkOption {
+          conf = mkOption {
             type = lib.types.attrsOf lib.types.any;
             default = {
               CACHES = {
