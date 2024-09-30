@@ -237,7 +237,7 @@
 
 
           # Create Redis Server
-          
+
           # services.redis.servers."agl-monitor" = {
           #   enable = true;
           #   bind = config.services.agl-monitor.redis-bind;
@@ -317,7 +317,7 @@
           #       "CELERY_SIGNAL_LOGFILE=${config.services.agl-monitor.conf.CELERY_SIGNAL_LOGFILE}"
           #     ];
           #   };
-          };
+          # };
         };
 
       };
