@@ -1,5 +1,8 @@
 result/
 result/*
+.direnv/
+agl_monitor/result/
+# agl_monitor/result
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "agl-monitor-flake"
+name = "agl-monitor"
 
 packages = [
-    { include = "agl_monitor_flake" }
+    { include = "agl_monitor" }
 ]
 
 version = "0.1.0"
@@ -13,16 +13,29 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-django = "~4.2"
 gunicorn = "^23.0.0"
+celery = "^5.4.0"
+whitenoise = {extras = ["brotli"], version = "^6.7.0"}
+djangorestframework = "^3.15.2"
+django-allauth = "^65.0.2"
+django-cookiebanner = "^0.2.8"
+django-admin-interface = "^0.28.9"
+django-celery-beat = "^2.7.0"
+django-redis = "^5.4.0"
+django-celery-results = "^2.5.1"
+requests = "^2.32.3"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
+# endoreg-db = "^0.4"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-django-server = "agl_monitor_flake.run_gunicorn:main"
+# # redis-server = "agl_monitor.run_redis:main"
+# # celery-worker = "agl_monitor.run_celery:main"
+# # celery-beat = "agl_monitor.run_celery_beat:main"
+django-server = "agl_monitor.run_gunicorn:main"
