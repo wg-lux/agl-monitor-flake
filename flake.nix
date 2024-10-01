@@ -96,6 +96,7 @@
         poetry
         python311Packages.venvShellHook 
       ];
+      venvDir = ".venv";
     };
 
     poetryEnv = poetry2nix.mkPoetryEnv {
