@@ -18,11 +18,11 @@
     poetry2nix.url = "github:nix-community/poetry2nix";
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    endoreg-db = {
-      # url = "github:wg-lux/endoreg-db";
-      url = "/home/agl-admin/dev/endoreg-db";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # endoreg-db = {
+    #   # url = "github:wg-lux/endoreg-db";
+    #   url = "/home/agl-admin/dev/endoreg-db";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     cachix = {
       url = "github:cachix/cachix";
@@ -84,12 +84,11 @@
       python = pkgs."python${python_version}";
       overrides = p2n-overrides;
       preferWheels = true; # some packages, e.g. transformers break if false
-      # propagatedBuildInputs =  with pkgs."python${python_version}Packages"; [];
+      propagatedBuildInputs =  with pkgs."python${python_version}Packages"; [
+      ];
       nativeBuildInputs = with pkgs."python${python_version}Packages"; [
         pip
         setuptools
-        icecream
-        inputs.endoreg-db.packages.x86_64-linux.poetryApp
       ];
     };
     
@@ -113,10 +112,10 @@
       # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_dev
       # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_prod
 
-      ### When Using the shell to run the Celery Worker
+      ### When testing service package to run the Server
       # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.initial_settings
-      export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_dev
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_dev
+      export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
 
         export DJANGO_SECRET_KEY=change-me
         export DJANGO_DEBUG=True
@@ -161,6 +160,18 @@
             type = lib.types.str;
             default = "service-user";
             description = "The group under which the AGL Monitor Server will run";
+          };
+
+          setup-script = mkOption {
+            type = lib.types.anything;
+            default = "echo 'No setup script defined'";
+            description = "The script which sets up the AGL Monitor service";
+          };
+
+          setup-script-name = mkOption {
+            type = lib.types.str;
+            default = "agl-monitor-pre";
+            description = "The name of the setup script";
           };
 
           custom-logs-dir = mkOption {
@@ -212,6 +223,19 @@
             description = "The address on which the Redis server will listen";
           };
 
+          user-dir = mkOption {
+            type = lib.types.str;
+            default = "/etc/logging-user";
+            description = "The directory where the AGL Monitor user files will be stored";
+          };
+
+          service-dir = mkOption {
+            type = lib.types.str;
+            default = "/etc/logging-user/agl-monitor";
+            description = "The directory where the AGL Monitor service will be stored";
+          };
+
+
           conf = mkOption {
             type = lib.types.attrsOf lib.types.anything;
             default = {
@@ -242,9 +266,8 @@
         };
 
         # Service Implementation
+        
         config = lib.mkIf config.services.agl-monitor.enable {
-
-
 
           # Create Redis Server
 
@@ -252,15 +275,10 @@
             enable = true;
             bind = config.services.agl-monitor.redis-bind;
             port = config.services.agl-monitor.redis-port;
-            # port = "${toString config.services.agl-monitor.redis-port}";
             settings = {};
           };
 
-
-
-
           # Create Celery Service
-
           systemd.services.agl-monitor-celery = {
             description = "AGL Monitor Celery Service";
             after = [ "network.target" ];
@@ -272,7 +290,7 @@
               # WorkingDirectory = ./.; REQUIRED?!
               User = config.services.agl-monitor.user;
               Group = config.services.agl-monitor.group;
-              Environment = [];
+              
             };
             # script = ''
             #     nix develop
@@ -301,20 +319,46 @@
             # '';
           };
 
-          # Create the AGL Monitor Service
+          # Create service which runs before the django server
+          # the service should 
+          # - call a script which checks whether the ${service-dir} exists and if not, creates it (including the necessary parents)
+          # - check if directory has owner and group set to ${config.services.agl-monitor.user} and ${config.services.agl-monitor.group}
+          # - check if the directory has the correct permissions (0755)
+          # Script is passed as "setup-script" and "script-name" in the configuration
 
-          systemd.services.agl-monitor = {
-            description = "AGL Monitor Service";
+
+          systemd.services.agl-monitor-pre = {
+            description = "AGL Monitor Pre Service";
             after = [ "network.target" ];
             wantedBy = [ "multi-user.target" ];
+            before = [ "agl-monitor.service" ]; 
             serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/django-server";
+              ExecStart = "${config.services.agl-monitor.setup-script}/bin/${config.services.agl-monitor.setup-script-name}";
               Restart = "always";
               RestartSec = "5";
               # WorkingDirectory = ./.; REQUIRED?!
+              User = "root";  # Run as root to ensure directory creation and permissions are correct
+              Group = "root";
+              Environment = [];
+            };
+          };
+
+          # Create the AGL Monitor Service
+          systemd.services.agl-monitor = {
+            description = "AGL Monitor Service";
+            after = [ "network.target" "agl-monitor-pre.service" ];
+            wantedBy = [ "multi-user.target" ];
+            serviceConfig = {
+              ExecStart = "${poetryApp}/bin/django-server";
+              Restart = "always";
+              RestartSec = "5";
+              WorkingDirectory = ./.; # REQUIRED?!
               User = config.services.agl-monitor.user;
               Group = config.services.agl-monitor.group;
               Environment = [
+                "PATH=/run/current-system/sw/bin/"
+                # "PATH=${config.services.agl-home-django.working-directory}/.venv/bin:/run/current-system/sw/bin"
+                "SERVICE_BASE_DIR=${config.services.agl-monitor.service-dir}"
                 "DJANGO_SETTINGS_MODULE=${config.services.agl-monitor.django-settings-module}"
                 "DJANGO_DEBUG=${toString config.services.agl-monitor.django-debug}"
                 "CELERY_BROKER_URL=${config.services.agl-monitor.conf.CELERY_BROKER_URL}"
@@ -333,6 +377,5 @@
       };
     };
 
-  
   };
 }

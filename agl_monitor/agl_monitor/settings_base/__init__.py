@@ -1,14 +1,10 @@
 from pathlib import Path
-from .static import STATIC_URL, STATIC_ROOT, STORAGES
+from .static import BASE_DIR, STATIC_URL, STATIC_ROOT, STORAGES
 from .internationalization import LANGUAGE_CODE, TIME_ZONE, USE_I18N, USE_TZ
 from .logging_conf import LOGGING
 from .oauth import *
 from .cookiebanner import *
 from .celery import *
-
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 

@@ -24,11 +24,10 @@ django-celery-beat = "^2.7.0"
 django-redis = "^5.4.0"
 django-celery-results = "^2.5.1"
 requests = "^2.32.3"
-
+endoreg-db = "0.4.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
-# endoreg-db = "^0.4"
 
 [build-system]
 requires = ["poetry-core"]

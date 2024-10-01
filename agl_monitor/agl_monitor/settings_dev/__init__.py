@@ -5,7 +5,7 @@ import os
 # SECRET_KEY = 'your_dev_secret_key'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', True)
 
 # SECRET_KEY = "django-insecure-powk20*'__!xpq@"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')

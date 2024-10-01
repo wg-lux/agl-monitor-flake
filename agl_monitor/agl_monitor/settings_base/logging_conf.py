@@ -8,12 +8,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
@@ -27,7 +21,7 @@ LOGGING = {
             'propagate': True,
         },
         "authentication": {
-            "handlers": ["console", "file"],
+            "handlers": ["console"],
             "level": "DEBUG",
             "propagate": True,
         },
