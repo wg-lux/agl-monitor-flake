@@ -315,7 +315,6 @@
               User = config.services.agl-monitor.user;
               Group = config.services.agl-monitor.group;
               Environment = [
-                "PATH=${poetryApp}/bin:/run/current-system/sw/bin"
                 "DJANGO_SETTINGS_MODULE=${config.services.agl-monitor.django-settings-module}"
                 "DJANGO_DEBUG=${toString config.services.agl-monitor.django-debug}"
                 "CELERY_BROKER_URL=${config.services.agl-monitor.conf.CELERY_BROKER_URL}"
