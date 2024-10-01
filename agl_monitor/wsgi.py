@@ -11,7 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'agl_monitor.agl_monitor.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'agl_monitor.settings_prod')
 
 # always set DJANGO_SETTINGS_MODULE to the correct settings file
 

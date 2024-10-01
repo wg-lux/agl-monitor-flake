@@ -98,11 +98,24 @@
     packages.x86_64-linux.poetryApp = poetryApp;
     packages.x86_64-linux.default = poetryApp;
     
-    apps.x86_64-linux.default = {
+    apps.x86_64-linux.celery-beat = {
+      type = "app";
+      program = "${poetryApp}/bin/celery-beat";
+    };
+
+    apps.x86_64-linux.celery-worker = {
+      type = "app";
+      program = "${poetryApp}/bin/celery-worker";
+    };
+
+    apps.x86_64-linux.django-server = {
       type = "app";
       program = "${poetryApp}/bin/django-server";
     };
 
+    apps.x86_64-linux.default = self.apps.x86_64-linux.django-server;
+
+  
     devShells.x86_64-linux.default = pkgs.mkShell {
       inputsFrom = [ self.packages.x86_64-linux.poetryApp ];
       packages = [ pkgs.poetry ];
@@ -110,12 +123,12 @@
       ### When Using the shell to run the Django Server, using manage.py runserver
       # export DJANGO_SETTINGS_MODULE=agl_monitor.initial_settings
       # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_dev
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_prod
+      export DJANGO_SETTINGS_MODULE=agl_monitor.settings_prod
 
       ### When testing service package to run the Server
       # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.initial_settings
       # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_dev
-      export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
 
         export DJANGO_SECRET_KEY=change-me
         export DJANGO_DEBUG=True
@@ -188,7 +201,7 @@
 
           django-settings-module = mkOption {
               type = lib.types.str;
-              default = "agl_monitor.agl_monitor.settings_dev";
+              default = "agl_monitor.settings_prod";
               description = "The settings module for the Django application";
             };
 
