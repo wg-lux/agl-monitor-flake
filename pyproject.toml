@@ -35,6 +35,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 # # redis-server = "agl_monitor.run_redis:main"
-# # celery-worker = "agl_monitor.run_celery:main"
-# # celery-beat = "agl_monitor.run_celery_beat:main"
+celery-worker = "agl_monitor.run_celery_worker:main"
+celery-beat = "agl_monitor.run_celery_beat:main"
 django-server = "agl_monitor.run_gunicorn:main"

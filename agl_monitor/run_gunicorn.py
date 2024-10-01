@@ -6,7 +6,7 @@ def main():
     # Define default Gunicorn options
     default_args = [
         "gunicorn",               # Gunicorn command
-        "agl_monitor.agl_monitor.wsgi:application", # WSGI application
+        "agl_monitor.wsgi:application", # WSGI application
         "--workers", "2",          # Default number of workers 4
         "--bind", "localhost:8000"   # Default binding to 0.0.0.0:8000
     ]

@@ -18,11 +18,11 @@
     poetry2nix.url = "github:nix-community/poetry2nix";
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    # endoreg-db = {
-    #   # url = "github:wg-lux/endoreg-db";
-    #   url = "/home/agl-admin/dev/endoreg-db";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    endoreg-db = {
+      url = "github:wg-lux/endoreg-db";
+      # url = "/home/agl-admin/dev/endoreg-db";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     cachix = {
       url = "github:cachix/cachix";
@@ -35,7 +35,7 @@
     system = "x86_64-linux";
     self = inputs.self;
     version = "0.1.${pkgs.lib.substring 0 8 inputs.self.lastModifiedDate}.${inputs.self.shortRev or "dirty"}";
-    python_version = "311";
+    python-version = "311";
     cachix = inputs.cachix;
 
     nvidiaCache = cachix.lib.mkCachixCache {
@@ -62,6 +62,7 @@
       wikipedia-api = [ "setuptools" ];
       django-flat-theme = [ "setuptools" ];
       django-flat-responsive = [ "setuptools" ];
+      pypdfium2 = [ "setuptools" ];
     };
 
     poetry2nix = inputs.poetry2nix.lib.mkPoetry2Nix { inherit pkgs;};
@@ -81,15 +82,33 @@
     poetryApp = poetry2nix.mkPoetryApplication {
       projectDir = ./.;
       src = lib.cleanSource ./.;
-      python = pkgs."python${python_version}";
+      python = pkgs."python${python-version}";
       overrides = p2n-overrides;
       preferWheels = true; # some packages, e.g. transformers break if false
-      propagatedBuildInputs =  with pkgs."python${python_version}Packages"; [
+      propagatedBuildInputs =  with pkgs."python${python-version}Packages"; [
+        
       ];
-      nativeBuildInputs = with pkgs."python${python_version}Packages"; [
+      nativeBuildInputs = with pkgs."python${python-version}Packages"; [
         pip
         setuptools
       ];
+      buildInputs = with pkgs; [
+        poetry
+        python311Packages.venvShellHook 
+      ];
+    };
+
+    poetryEnv = poetry2nix.mkPoetryEnv {
+      projectDir = ./.;
+      python = pkgs."python${python-version}";
+      extraPackages = (ps: [
+        ps.pip
+      ]);
+      overrides = p2n-overrides;
+      editablePackageSources = {
+        endoreg-db = inputs.endoreg-db;
+     };
+      preferWheels = true;
     };
     
   in
@@ -98,36 +117,50 @@
     packages.x86_64-linux.poetryApp = poetryApp;
     packages.x86_64-linux.default = poetryApp;
     
-    apps.x86_64-linux.default = {
+    apps.x86_64-linux.celery-beat = {
+      type = "app";
+      program = "${poetryApp}/bin/celery-beat";
+    };
+
+    apps.x86_64-linux.celery-worker = {
+      type = "app";
+      program = "${poetryApp}/bin/celery-worker";
+    };
+
+    apps.x86_64-linux.django-server = {
       type = "app";
       program = "${poetryApp}/bin/django-server";
     };
 
+    apps.x86_64-linux.default = self.apps.x86_64-linux.django-server;
+  
     devShells.x86_64-linux.default = pkgs.mkShell {
-      inputsFrom = [ self.packages.x86_64-linux.poetryApp ];
-      packages = [ pkgs.poetry ];
-      shellHook = ''
-      ### When Using the shell to run the Django Server, using manage.py runserver
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.initial_settings
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_dev
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_prod
+      buildInputs = [
+        pkgs.poetry
 
-      ### When testing service package to run the Server
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.initial_settings
-      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_dev
-      export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
+        poetryEnv
+        pkgs.python311Packages.numpy
+        pkgs.python311Packages.venvShellHook
 
-        export DJANGO_SECRET_KEY=change-me
-        export DJANGO_DEBUG=True
-        export CELERY_BROKER_URL=redis://localhost:6382/0
-        export CELERY_RESULT_BACKEND=redis://localhost:6382/0
-        export CELERY_ACCEPT_CONTENT=application/json
-        export CELERY_TASK_SERIALIZER=json
-        export CELERY_RESULT_SERIALIZER=json
-        export CELERY_TIMEZONE=UTC
-        export CELERY_BEAT_SCHEDULER=django_celery_beat.schedulers:DatabaseScheduler
-        export CELERY_SIGNAL_LOGFILE=/etc/custom-logs/agl-monitor-celery-signal.log
-      '';
+      ];
+      venvDir = ".venv";
+
+      # DJANGO SETTINGS
+      # DJANGO_SETTINGS_MODULE="agl_monitor.settings_dev";
+      DJANGO_SETTINGS_MODULE="agl_monitor.settings_prod";
+      DJANGO_DEBUG=true;
+      DJANGO_SECRET_KEY="change-me";
+
+      # CELERY SETTINGS
+      CELERY_BROKER_URL="redis://localhost:6382/0";
+      CELERY_RESULT_BACKEND="redis://localhost:6382/0";
+      CELERY_ACCEPT_CONTENT="application/json";
+      CELERY_TASK_SERIALIZER="json";
+      CELERY_RESULT_SERIALIZER="json";
+      CELERY_TIMEZONE="UTC";
+      CELERY_BEAT_SCHEDULER="django_celery_beat.schedulers:DatabaseScheduler";
+      CELERY_SIGNAL_LOGFILE="/etc/custom-logs/agl-monitor-celery-signal.log";
+
     };
 
     ## AGL Anonymizer Module
@@ -188,7 +221,7 @@
 
           django-settings-module = mkOption {
               type = lib.types.str;
-              default = "agl_monitor.agl_monitor.settings_dev";
+              default = "agl_monitor.settings_prod";
               description = "The settings module for the Django application";
             };
 
@@ -284,7 +317,7 @@
             after = [ "network.target" ];
             wantedBy = [ "multi-user.target" ];
             serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor worker -l info";
+              ExecStart = "${poetryApp}/bin/celery-worker";
               Restart = "always";
               RestartSec = "5";
               # WorkingDirectory = ./.; REQUIRED?!
@@ -305,7 +338,7 @@
             after = [ "network.target" ];
             wantedBy = [ "multi-user.target" ];
             serviceConfig = {
-              ExecStart = "${pkgs.python311}/bin/python ${poetryApp}/bin/celery -A agl_monitor beat -l info";
+              ExecStart = "${poetryApp}/bin/celery-beat";
               Restart = "always";
               RestartSec = "5";
               # WorkingDirectory = ./.; REQUIRED?!
