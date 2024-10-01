@@ -1,5 +1,4 @@
-result/
-result/*
+result
 .direnv/
 agl_monitor/result/
 # agl_monitor/result

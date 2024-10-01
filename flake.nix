@@ -19,7 +19,8 @@
     poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     endoreg-db = {
-      url = "github:wg-lux/endoreg-db";
+      # url = "github:wg-lux/endoreg-db";
+      url = "/home/agl-admin/dev/endoreg-db";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -88,12 +89,8 @@
         pip
         setuptools
         icecream
-        pdfplumber
         inputs.endoreg-db.packages.x86_64-linux.poetryApp
       ];
-      # postShellHook = ''
-      #   python manage.py migrate  
-      # '';
     };
     
   in
@@ -111,7 +108,16 @@
       inputsFrom = [ self.packages.x86_64-linux.poetryApp ];
       packages = [ pkgs.poetry ];
       shellHook = ''
-        export DJANGO_SETTINGS_MODULE=agl_monitor.settings_dev
+      ### When Using the shell to run the Django Server, using manage.py runserver
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.initial_settings
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_dev
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.settings_prod
+
+      ### When Using the shell to run the Celery Worker
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.initial_settings
+      export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_dev
+      # export DJANGO_SETTINGS_MODULE=agl_monitor.agl_monitor.settings_prod
+
         export DJANGO_SECRET_KEY=change-me
         export DJANGO_DEBUG=True
         export CELERY_BROKER_URL=redis://localhost:6382/0
@@ -171,7 +177,7 @@
 
           django-settings-module = mkOption {
               type = lib.types.str;
-              default = "agl_monitor.settings_prod";
+              default = "agl_monitor.agl_monitor.settings_dev";
               description = "The settings module for the Django application";
             };
 
@@ -207,7 +213,7 @@
           };
 
           conf = mkOption {
-            type = lib.types.attrsOf lib.types.any;
+            type = lib.types.attrsOf lib.types.anything;
             default = {
               CACHES = {
                 "default" = {

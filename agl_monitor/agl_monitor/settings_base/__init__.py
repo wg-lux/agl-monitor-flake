@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'allauth.usersessions',
     "cookiebanner",
 
-    "user_authentication.apps.UserAuthenticationConfig",
-    "content_management.apps.ContentManagementConfig",
+    # "user_authentication.apps.UserAuthenticationConfig",
+    # "content_management.apps.ContentManagementConfig",
 
     # Tasks
     "django_redis",
